@@ -91,7 +91,7 @@ public:
     Display display; // Display
     bool keypad[16]{}; // Keypad
     void setMode(Mode mode);
-    void disassemble(Instruction i); // Disassemble instruction (for debugging)
+    std::string disassemble(Instruction i); // Return disassembled instruction string
     void updateTimers(); // Update timers
 };
 

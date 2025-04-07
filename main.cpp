@@ -5,9 +5,11 @@
 #include "Chip8.h"
 #include "SuperChip.h"
 #include <SDL2/SDL.h>
+#include <SDL_ttf.h>
 #include <map>
 #include <filesystem>
 #include <stdexcept>
+#include "DisassemblyWindow.h"
 
 struct EmulatorConfig {
     std::string romPath;
@@ -149,33 +151,94 @@ int main(int argc, char* argv[]) {
         auto lastFrameTime = Clock::now();
         auto lastCpuTime = Clock::now();
         
+        // Create disassembly window if enabled
+        std::unique_ptr<DisassemblyWindow> disasmWindow;
+        if (config.enableDisassembler) {
+            // Calculate window dimensions and positions
+            int mainWidth = chip8->display.getWidth() * config.scale;
+            int mainHeight = chip8->display.getHeight() * config.scale;
+            
+            // Position main window slightly to the right of center
+            SDL_SetWindowPosition(sdl.getWindow(), 
+                                SDL_WINDOWPOS_CENTERED + mainWidth/4, 
+                                SDL_WINDOWPOS_CENTERED);
+            
+            // Create disassembly window (vertical rectangle on the left)
+            disasmWindow = std::make_unique<DisassemblyWindow>(
+                "CHIP-8 Disassembly",
+                SDL_WINDOWPOS_CENTERED - mainWidth/4 - 300,  // Left of main window
+                SDL_WINDOWPOS_CENTERED,  // Same vertical position
+                300,  // Fixed width for disassembly
+                mainHeight  // Match main window height
+            );
+        }
+
         bool running = true;
+        bool paused = false;
         SDL_Event event;
         
         while (running) {
             // Handle events
             while (SDL_PollEvent(&event)) {
+                // Check for main window close
                 if (event.type == SDL_QUIT) {
                     running = false;
+                    break;
+                }
+                
+                // Check for any window close events
+                if (event.type == SDL_WINDOWEVENT) {
+                    Uint32 mainWindowID = SDL_GetWindowID(sdl.getWindow());
+                    if (event.window.windowID == mainWindowID && 
+                        event.window.event == SDL_WINDOWEVENT_CLOSE) {
+                        running = false;
+                        break;
+                    }
+                    if (disasmWindow) {
+                        disasmWindow->checkEvent(event);
+                        if (!disasmWindow->isOpen()) {
+                            running = false;
+                            break;
+                        }
+                    }
                 }
                 else if (event.type == SDL_KEYDOWN || event.type == SDL_KEYUP) {
+                    // Handle pause state with KEYDOWN only
+                    if (event.type == SDL_KEYDOWN && event.key.keysym.scancode == SDL_SCANCODE_SPACE) {
+                        paused = !paused;  // Toggle pause state
+                        // Update window title to show pause state
+                        std::string title = "CHIP-8 Emulator";
+                        if (paused) {
+                            title += " (Paused)";
+                        }
+                        SDL_SetWindowTitle(sdl.getWindow(), title.c_str());
+                    }
+                    
+                    // Handle regular keypad input for both KEYDOWN and KEYUP
                     auto it = KEYMAP.find(event.key.keysym.scancode);
                     if (it != KEYMAP.end()) {
                         chip8->keypad[it->second] = (event.type == SDL_KEYDOWN);
                     }
                 }
             }
-            
-            // Run CPU cycles
+
+            // Run CPU cycles and handle timing
             auto now = Clock::now();
+            
+            // Always update CPU cycle timing
             while (now - lastCpuTime >= cpuCycleTime) {
-                if (config.enableDisassembler) {
-                    uint16_t opcode = chip8->fetch();
-                    auto instruction = chip8->decode(opcode);
-                    chip8->disassemble(instruction);
-                    chip8->execute(instruction);
-                } else {
-                    chip8->emulateCycle();
+                // Only execute instructions if not paused
+                if (!paused) {
+                    if (config.enableDisassembler) {
+                        uint16_t opcode = chip8->fetch();
+                        auto instruction = chip8->decode(opcode);
+                        std::string disasm = chip8->disassemble(instruction);
+                        disasmWindow->addInstruction(disasm);
+                        disasmWindow->render();
+                        chip8->execute(instruction);
+                    } else {
+                        chip8->emulateCycle();
+                    }
                 }
                 lastCpuTime += std::chrono::duration_cast<std::chrono::steady_clock::duration>(cpuCycleTime);
             }

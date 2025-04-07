@@ -8,14 +8,16 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-# Find SDL2 package
+# Find required packages
 find_package(SDL2 REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 
 # Define the executable
 add_executable(${PROJECT_NAME}
     main.cpp
     Chip8.cpp
     SuperChip.cpp
+    DisassemblyWindow.cpp
 )
 
 # Include directories using modern CMake
@@ -27,6 +29,7 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # Link libraries using modern CMake
 target_link_libraries(${PROJECT_NAME} PRIVATE
     ${SDL2_LIBRARIES}
+    SDL2_ttf::SDL2_ttf
 )
 
 # Enable warnings

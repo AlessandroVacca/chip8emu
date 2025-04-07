@@ -1,7 +1,3 @@
-//
-// Created by Alessandro Vacca on 06/04/25.
-//
-
 #include "Chip8.h"
 #include <fstream>
 #include <sstream>
@@ -95,8 +91,8 @@ void Chip8::execute(Instruction i) {
                     if (i.nnn == 0) {
                         break;
                     }
-                // Call RCA 1802 program at address nnn
-                //throw std::runtime_error("0NNN instruction: RCA 1802 program at address " + std::to_string(i.nnn));
+                    // Call RCA 1802 program at address nnn
+                    //throw std::runtime_error("0NNN instruction: RCA 1802 program at address " + std::to_string(i.nnn));
                     std::cout << "0NNN instruction: RCA 1802 program: 0x" << std::hex << (i.opcode << 12 | i.nnn) << std::endl;
                     break;
             }
@@ -418,103 +414,105 @@ void Chip8::updateTimers() {
     }
 }
 
-void Chip8::disassemble(Instruction i) {
+std::string Chip8::disassemble(Instruction i) {
     // convert decoded instruction to hex string
     std::stringstream ss;
     ss << std::hex << std::uppercase << std::setfill('0') << std::setw(4)
        << ((i.opcode << 12) | (i.x << 8) | (i.y << 4) | i.n);
     std::string instructionString = ss.str();
-    std::string disassembledInstruction;
+    std::string result;
+
     // disassemble instruction
     if (instructionString == "00E0") {
-        disassembledInstruction = "clear";
+        result = "clear";
     } else if (instructionString == "00EE") {
-        disassembledInstruction = "return";
+        result = "return";
     } else if (instructionString == "00FB") {
-        disassembledInstruction = "scroll-right";
+        result = "scroll-right";
     } else if (instructionString == "00FC") {
-        disassembledInstruction = "scroll-left";
+        result = "scroll-left";
     } else if (instructionString.substr(0, instructionString.size() - 1) == "00C") {
-        disassembledInstruction = "scroll-down " + std::to_string(i.n);
+        result = "scroll-down " + std::to_string(i.n);
     }
     else if (instructionString == "00FD") {
-        disassembledInstruction = "exit";
+        result = "exit";
     } else if (instructionString == "00FE") {
-        disassembledInstruction = "lores";
+        result = "lores";
     } else if (instructionString == "00FF") {
-        disassembledInstruction = "hires";
+        result = "hires";
     }
     else if (instructionString[0] == '1') {
-        disassembledInstruction = "jump 0x" + instructionString.substr(1);
+        result = "jump 0x" + instructionString.substr(1);
     } else if (instructionString[0] == '2') {
-        disassembledInstruction = "call 0x" + instructionString.substr(1);
+        result = "call 0x" + instructionString.substr(1);
     } else if (instructionString[0] == '3') {
-        disassembledInstruction = "skip if V(0x" + std::string(1, instructionString[1]) + ") == 0x" + instructionString.substr(2);
+        result = "skip if V(0x" + std::string(1, instructionString[1]) + ") == 0x" + instructionString.substr(2);
     } else if (instructionString[0] == '4') {
-        disassembledInstruction = "skip if V(0x" + std::string(1, instructionString[1]) + ") != 0x" + instructionString.substr(2);
+        result = "skip if V(0x" + std::string(1, instructionString[1]) + ") != 0x" + instructionString.substr(2);
     } else if (instructionString[0] == '5') {
-        disassembledInstruction = "skip if V(0x" + std::string(1, instructionString[1]) + ") == V(0x" + instructionString[2] + ")";
+        result = "skip if V(0x" + std::string(1, instructionString[1]) + ") == V(0x" + instructionString[2] + ")";
     } else if (instructionString[0] == '6') {
-        disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := 0x" + instructionString.substr(2);
+        result = "V(0x" + std::string(1, instructionString[1]) + ") := 0x" + instructionString.substr(2);
     } else if (instructionString[0] == '7') {
-        disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") += 0x" + instructionString.substr(2);
+        result = "V(0x" + std::string(1, instructionString[1]) + ") += 0x" + instructionString.substr(2);
     } else if (instructionString[0] == '8') {
         if (instructionString[3] == '0') {
-            disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[2] + ")";
+            result = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[2] + ")";
         } else if (instructionString[3] == '1') {
-            disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") OR V(0x" + instructionString[2] + ")";
+            result = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") OR V(0x" + instructionString[2] + ")";
         } else if (instructionString[3] == '2') {
-            disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") AND V(0x" + instructionString[2] + ")";
+            result = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") AND V(0x" + instructionString[2] + ")";
         } else if (instructionString[3] == '3') {
-            disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") XOR V(0x" + instructionString[2] + ")";
+            result = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") XOR V(0x" + instructionString[2] + ")";
         } else if (instructionString[3] == '4') {
-            disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") + V(0x" + instructionString[2] + ")";
+            result = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") + V(0x" + instructionString[2] + ")";
         } else if (instructionString[3] == '5') {
-            disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") - V(0x" + instructionString[2] + ")";
+            result = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") - V(0x" + instructionString[2] + ")";
         } else if (instructionString[3] == '6') {
-            disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") >> 1";
+            result = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") >> 1";
         } else if (instructionString[3] == '7') {
-            disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[2] + ") - V(0x" + instructionString[1] + ")";
+            result = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[2] + ") - V(0x" + instructionString[1] + ")";
         } else if (instructionString[3] == 'E') {
-            disassembledInstruction = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") << 1";
+            result = "V(0x" + std::string(1, instructionString[1]) + ") := V(0x" + instructionString[1] + ") << 1";
         }
     } else if (instructionString[0] == '9') {
-        disassembledInstruction = "skip if V(0x" + std::string(1, instructionString[1]) + ") != V(0x" + instructionString[2] + ")";
+        result = "skip if V(0x" + std::string(1, instructionString[1]) + ") != V(0x" + instructionString[2] + ")";
     } else if (instructionString[0] == 'A') {
-        disassembledInstruction = "I := 0x" + instructionString.substr(1);
+        result = "I := 0x" + instructionString.substr(1);
     } else if (instructionString[0] == 'B') {
-        disassembledInstruction = "jump V0 + 0x" + instructionString.substr(1);
+        result = "jump V0 + 0x" + instructionString.substr(1);
     } else if (instructionString[0] == 'C') {
-        disassembledInstruction = "rand, bitmask V(0x" + std::string(1, instructionString[1]) + ")";
+        result = "rand, bitmask V(0x" + std::string(1, instructionString[1]) + ")";
     } else if (instructionString[0] == 'D') {
-        disassembledInstruction = "draw (" + std::to_string(i.x) + ", " + std::to_string(i.y) +
-                                             "), height " + std::to_string(i.n);
+        result = "draw (" + std::to_string(i.x) + ", " + std::to_string(i.y) +
+                             "), height " + std::to_string(i.n);
     } else if (instructionString[0] == 'E') {
         if (instructionString.substr(2) == "9E") {
-            disassembledInstruction = "skip if key V(0x" + std::string(1, instructionString[1]) + ") pressed";
+            result = "skip if key V(0x" + std::string(1, instructionString[1]) + ") pressed";
         } else if (instructionString.substr(2) == "A1") {
-            disassembledInstruction = "skip if key V(0x" + std::string(1, instructionString[1]) + ") not pressed";
+            result = "skip if key V(0x" + std::string(1, instructionString[1]) + ") not pressed";
         }
     } else if (instructionString[0] == 'F') {
         if (instructionString.substr(2) == "07") {
-            disassembledInstruction= "delay store V(0x" + std::string(1, instructionString[1]) + ")";
+            result = "delay store V(0x" + std::string(1, instructionString[1]) + ")";
         } else if (instructionString.substr(2) == "0A") {
-            disassembledInstruction = "wait for key V(0x" + std::string(1, instructionString[1]) + ")";
+            result = "wait for key V(0x" + std::string(1, instructionString[1]) + ")";
         } else if (instructionString.substr(2) == "15") {
-            disassembledInstruction = "delay set V(0x" + std::string(1, instructionString[1]) + ")";
+            result = "delay set V(0x" + std::string(1, instructionString[1]) + ")";
         } else if (instructionString.substr(2) == "18") {
-            disassembledInstruction = "sound set V(0x" + std::string(1, instructionString[1]) + ")";
+            result = "sound set V(0x" + std::string(1, instructionString[1]) + ")";
         } else if (instructionString.substr(2) == "1E") {
-            disassembledInstruction = "I += V(0x" + std::string(1, instructionString[1]) + ")";
+            result = "I += V(0x" + std::string(1, instructionString[1]) + ")";
         } else if (instructionString.substr(2) == "29") {
-            disassembledInstruction = "I := addr sprite V(0x" + std::string(1, instructionString[1]) + ")";
+            result = "I := addr sprite V(0x" + std::string(1, instructionString[1]) + ")";
         } else if (instructionString.substr(2) == "33") {
-            disassembledInstruction = "BCD store V(0x" + std::string(1, instructionString[1]) + ")";
+            result = "BCD store V(0x" + std::string(1, instructionString[1]) + ")";
         } else if (instructionString.substr(2) == "55") {
-            disassembledInstruction = "store V0 to V(0x" + std::string(1, instructionString[1]) + ")";
+            result = "store V0 to V(0x" + std::string(1, instructionString[1]) + ")";
         } else if (instructionString.substr(2) == "65") {
-            disassembledInstruction = "load V0 to V(0x" + std::string(1, instructionString[1]) + ")";
+            result = "load V0 to V(0x" + std::string(1, instructionString[1]) + ")";
         }
     }
-    std::cout << disassembledInstruction << std::endl;
+
+    return result;
 }

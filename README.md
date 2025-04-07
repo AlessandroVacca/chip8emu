@@ -6,7 +6,8 @@ A modern C++20 emulator for CHIP-8 and SuperCHIP with high-resolution graphics s
 
 - 🎮 Full CHIP-8 and SuperCHIP instruction set support
 - 🖥️ Dynamic resolution switching (64x32 and 128x64)
-- 🔍 Real-time instruction disassembler
+- 🔍 Real-time instruction disassembler with execution counting
+- ⏯️ Advanced debugging with pause/resume and state inspection
 - 📏 Configurable display scaling
 - ⚡ Modern C++20 implementation
 - 🎯 RAII-based resource management
@@ -23,13 +24,13 @@ A modern C++20 emulator for CHIP-8 and SuperCHIP with high-resolution graphics s
 
 #### macOS
 ```bash
-brew install cmake sdl2
+brew install cmake sdl2 sdl2_ttf
 ```
 
 #### Ubuntu/Debian
 ```bash
 sudo apt update
-sudo apt install build-essential cmake libsdl2-dev
+sudo apt install build-essential cmake libsdl2-dev libsdl2-ttf-dev
 ```
 
 ## Building
@@ -61,7 +62,7 @@ Usage: chip8emu [options] <rom_path>
 Options:
   --chip <type>    Chip type (chip8 or superchip) [default: chip8]
   --scale <n>      Display scale factor [default: 15]
-  --disasm         Enable instruction disassembly output
+  --disasm         Enable instruction disassembly window
   --help           Show this help message
 ```
 
@@ -73,8 +74,8 @@ Options:
 # Run a SuperCHIP ROM with increased display size
 ./chip8emu --chip superchip --scale 20 games/snake.ch8
 
-# Run with instruction disassembly output
-./chip8emu --disasm games/pong.ch8
+# Run with debug window (shows live instruction execution)
+./chip8emu --disasm games/pong.ch8  # Adds left-side debug window
 
 # Full debug mode
 ./chip8emu --chip superchip --scale 20 --disasm games/invaders.ch8
@@ -82,6 +83,7 @@ Options:
 
 ## Controls
 
+### CHIP-8 Keypad
 The emulator uses a standard QWERTY keyboard mapping for the CHIP-8's hexadecimal keypad:
 
 ```
@@ -92,6 +94,10 @@ CHIP-8 Key   Keyboard
 7 8 9 E     A S D F
 A 0 B F     Z X C V
 ```
+
+### Emulator Controls
+- **Space**: Pause/Resume emulation (toggles execution while maintaining state)
+- **X button**: Close window (either window closes emulator)
 
 ## Technical Details
 
